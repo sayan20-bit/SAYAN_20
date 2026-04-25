@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SAYAN ESPORTS PRO SYSTEM</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+    font-family:Arial;
+    background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    color:white;
+    padding:20px;
+}
+
+/* CONTAINER */
+.box{
+    background:rgba(255,255,255,0.05);
+    padding:20px;
+    border-radius:20px;
+    max-width:1200px;
+    margin:auto;
+}
+
+/* TITLE */
+h1{
+    text-align:center;
+    color:#00d2ff;
+    letter-spacing:2px;
+}
+
+/* INPUT */
+input{
+    display:block;
+    margin:20px auto;
+}
+
+/* TABLE */
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th,td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid #333;
+}
+
+th{
+    background:#00d2ff;
+    color:black;
+}
+
+/* MVP */
+.mvp{
+    background:rgba(255,215,0,0.1);
+    color:gold;
+    font-weight:bold;
+    animation:glow 1s infinite alternate;
+}
+
+@keyframes glow{
+    from{ text-shadow:0 0 5px gold;}
+    to{ text-shadow:0 0 20px gold;}
+}
+
+/* TEAM */
+.team{
+    color:#aaa;
+    font-size:12px;
+}
+
+/* BADGE */
+.badge{
+    background:#ff0055;
+    padding:3px 8px;
+    border-radius:5px;
+}
+
+/* SECTION */
+.section{
+    margin-top:40px;
+}
+
+/* CHART */
+#chartBox{
+    margin-top:30px;
+    background:#111;
+    padding:15px;
+    border-radius:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>🔥 SAYAN ESPORTS PRO SYSTEM</h1>
+
+<input type="file" id="files" multiple>
+
+<!-- TEAMS -->
+<div class="section">
+<h2>🏆 TEAMS</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Team</th>
+<th>Kills</th>
+<th>Points</th>
+<th>BOOYAH</th>
+</tr>
+</thead>
+<tbody id="teams"></tbody>
+</table>
+</div>
+
+<!-- PLAYERS -->
+<div class="section">
+<h2>👤 PLAYERS</h2>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Name</th>
+<th>Team</th>
+<th>Kills</th>
+<th>Damage</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="players"></tbody>
+</table>
+</div>
+
+<!-- CHART -->
+<div id="chartBox">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+
+let stats = {};
+let teams = {};
+
+/* FILE INPUT */
+document.getElementById('files').addEventListener('change', function(e){
+
+    const files = e.target.files;
+    stats = {};
+    teams = {};
+
+    let done = 0;
+
+    Array.from(files).forEach(file=>{
+        const reader = new FileReader();
+
+        reader.onload = function(){
+            parse(reader.result);
+            done++;
+
+            if(done === files.length){
+                render();
+            }
+        };
+
+        reader.readAsText(file);
+    });
+});
+
+/* POINTS SYSTEM */
+function getPoints(rank){
+    return {1:12,2:9,3:8,4:7,5:6,6:5,7:4,8:3,9:2,10:1}[rank] || 0;
+}
+
+/* PARSE LOG */
+function parse(text){
+
+    let currentTeam = "Unknown";
+    let lines = text.split("\n");
+
+    lines.forEach(line=>{
+
+        /* TEAM */
+        let teamMatch = line.match(/TeamName:\s*(.*?)(Rank|$)/i);
+        if(teamMatch) currentTeam = teamMatch[1].trim();
+
+        /* TEAM SCORE */
+        let teamScore = line.match(/TeamName:\s*(.*?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)/);
+
+        if(teamScore){
+            let name = teamScore[1];
+            let rank = +teamScore[2];
+            let kills = +teamScore[3];
+
+            if(!teams[name]){
+                teams[name]={k:0,p:0,t:0,b:0};
+            }
+
+            teams[name].k += kills;
+            teams[name].p += getPoints(rank);
+            teams[name].t += kills + getPoints(rank);
+            if(rank === 1) teams[name].b++;
+        }
+
+        /* PLAYER */
+        let p = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)\s+KILL:\s*(\d+)/i);
+
+        if(p){
+            let name = p[1];
+            let id = p[2];
+            let kills = +p[3];
+
+            if(!stats[id]){
+                stats[id] = {
+                    id,
+                    name,
+                    team: currentTeam,
+                    kills:0,
+                    damage:0
+                };
+            }
+
+            stats[id].kills += kills;
+        }
+
+        /* DAMAGE */
+        let dmg =
+            line.match(/damage\s*=\s*(\d+)/i) ||
+            line.match(/Damage\s+(\d+)/i) ||
+            line.match(/HPDecrease\s*(\d+)/i);
+
+        let id = (line.match(/(\d{7,10})/) || [])[0];
+
+        if(dmg && id && stats[id]){
+            stats[id].damage += +dmg[1];
+        }
+    });
+}
+
+/* RENDER */
+function render(){
+    renderPlayers();
+    renderTeams();
+    renderChart();
+}
+
+/* PLAYERS */
+function renderPlayers(){
+
+    let arr = Object.values(stats);
+
+    arr.sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage));
+
+    let html = "";
+
+    arr.forEach((p,i)=>{
+        html+=`
+        <tr class="${i===0?'mvp':''}">
+            <td>${i+1}</td>
+            <td>${i===0?'👑 ':''}${p.name}</td>
+            <td class="team">${p.team}</td>
+            <td>${p.kills}</td>
+            <td>${p.damage}</td>
+            <td>${i===0?'<span class="badge">MVP</span>':'PLAYER'}</td>
+        </tr>`;
+    });
+
+    document.getElementById("players").innerHTML = html;
+}
+
+/* TEAMS */
+function renderTeams(){
+
+    let arr = Object.keys(teams)
+    .sort((a,b)=>teams[b].t - teams[a].t);
+
+    let html = "";
+
+    arr.forEach((t,i)=>{
+        html+=`
+        <tr>
+            <td>${i+1}</td>
+            <td>${t}</td>
+            <td>${teams[t].k}</td>
+            <td>${teams[t].t}</td>
+            <td>${teams[t].b}</td>
+        </tr>`;
+    });
+
+    document.getElementById("teams").innerHTML = html;
+}
+
+/* CHART */
+let chart;
+
+function renderChart(){
+
+    let list = Object.values(stats);
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"),{
+        type:"bar",
+        data:{
+            labels:list.map(p=>p.name),
+            datasets:[{
+                label:"Kills",
+                data:list.map(p=>p.kills),
+                backgroundColor:"#00d2ff"
+            }]
+        },
+        options:{
+            plugins:{legend:{display:false}},
+            responsive:true
+        }
+    });
+}
+
+/* ================= PROTECTION ================= */
+
+// disable right click
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+// disable keys
+document.onkeydown = function(e){
+    if(
+        e.keyCode === 123 ||
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
+        (e.ctrlKey && e.shiftKey && e.keyCode === 74) ||
+        (e.ctrlKey && e.keyCode === 85) ||
+        (e.ctrlKey && e.keyCode === 83)
+    ){
+        return false;
+    }
+};
+
+// detect devtools
+setInterval(function(){
+    if(window.outerWidth - window.innerWidth > 160 ||
+       window.outerHeight - window.innerHeight > 160){
+        document.body.innerHTML = `
+        <h1 style="color:red;text-align:center;margin-top:20%;">ACCESS DENIED</h1>`;
+    }
+},1000);
+
+// disable console
+console.log = function(){};
+console.warn = function(){};
+console.error = function(){};
+
+</script>
+
+</body>
+</html>
