@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>SAYAN ESPORTS PRO SYSTEM</title>
+<title>SAYAN ESPORTS ANALYZER SYSTEM</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -85,7 +85,7 @@ th{
 
 <div class="box">
 
-<h1>🔥 SAYAN ESPORTS PRO SYSTEM</h1>
+<h1>🔥 SAYAN ESPORTS ANALYZER</h1>
 
 <input type="file" id="files" multiple>
 
@@ -129,6 +129,36 @@ th{
 </div>
 
 <script>
+
+
+    /* 🔒 PROTECTION SYSTEM - حطها هنا */
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+document.onkeydown = function(e){
+    if(
+        e.keyCode === 123 ||
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
+        (e.ctrlKey && e.shiftKey && e.keyCode === 74) ||
+        (e.ctrlKey && e.keyCode === 85) ||
+        (e.ctrlKey && e.keyCode === 83)
+    ){
+        return false;
+    }
+};
+
+setInterval(function(){
+    if(
+        window.outerWidth - window.innerWidth > 150 ||
+        window.outerHeight - window.innerHeight > 150
+    ){
+        document.body.innerHTML =
+        "<h1 style='color:red;text-align:center;margin-top:20%'>ACCESS DENIED</h1>";
+    }
+},1000);
+
+console.log = function(){};
+console.warn = function(){};
+console.error = function(){};
 
 let stats = {};
 let teams = {};
@@ -245,7 +275,7 @@ function renderPlayers(){
             <td class="team">${p.team}</td>
             <td>${p.kills}</td>
             <td>${p.damage}</td>
-            <td>${i===0?'<span class="badge">MVP</span>':'PLAYER'}</td>
+            <td>${i===0?'<span class="badge">MVP SAYAN ANALYZER </span>':'PLAYER'}</td>
         </tr>`;
     });
 
