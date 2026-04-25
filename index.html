@@ -73,12 +73,6 @@ th{
     font-size:12px;
 }
 
-.badge{
-    background:#ff0055;
-    padding:3px 8px;
-    border-radius:5px;
-}
-
 .section{
     margin-top:40px;
 }
@@ -100,7 +94,6 @@ th{
 
 <input type="file" id="files" multiple>
 
-<!-- 🔽 زر التحميل Excel -->
 <button onclick="downloadExcel()">⬇️ Download Excel</button>
 
 <div class="section">
@@ -144,11 +137,12 @@ th{
 
 <script>
 
-/* 🔒 PROTECTION SYSTEM */
+/* 🔒 PROTECTION */
 document.addEventListener("contextmenu", e => e.preventDefault());
 
 let stats = {};
 let teams = {};
+let chart;
 
 /* FILE INPUT */
 document.getElementById('files').addEventListener('change', function(e){
@@ -230,7 +224,6 @@ function parse(text){
         }
 
     });
-
 }
 
 /* RENDER */
@@ -243,9 +236,8 @@ function render(){
 /* PLAYERS */
 function renderPlayers(){
 
-    let arr = Object.values(stats);
-
-    arr.sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage));
+    let arr = Object.values(stats)
+    .sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage));
 
     let html = "";
 
@@ -257,7 +249,7 @@ function renderPlayers(){
             <td class="team">${p.team}</td>
             <td>${p.kills}</td>
             <td>${p.damage}</td>
-            <td>${i===0?'MVP SAYAN  ANALYZER':'PLAYER'}</td>
+            <td>${i===0?'MVP SAYAN':'PLAYER'}</td>
         </tr>`;
     });
 
@@ -287,8 +279,6 @@ function renderTeams(){
 }
 
 /* CHART */
-let chart;
-
 function renderChart(){
 
     let list = Object.values(stats);
@@ -312,17 +302,25 @@ function renderChart(){
     });
 }
 
-/* 📊 EXPORT EXCEL */
+/* 🔥 EXPORT EXCEL (نسخة مرتبة) */
 function downloadExcel(){
 
-    let playerData = Object.values(stats).map(p=>({
+    let playersSorted = Object.values(stats)
+    .sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage));
+
+    let playerData = playersSorted.map((p,i)=>({
+        Rank:i+1,
         Name:p.name,
         Team:p.team,
         Kills:p.kills,
         Damage:p.damage
     }));
 
-    let teamData = Object.keys(teams).map(t=>({
+    let teamSorted = Object.keys(teams)
+    .sort((a,b)=>teams[b].t - teams[a].t);
+
+    let teamData = teamSorted.map((t,i)=>({
+        Rank:i+1,
         Team:t,
         Kills:teams[t].k,
         Points:teams[t].t,
@@ -333,6 +331,23 @@ function downloadExcel(){
 
     let ws1 = XLSX.utils.json_to_sheet(playerData);
     let ws2 = XLSX.utils.json_to_sheet(teamData);
+
+    /* ✅ عرض الأعمدة */
+    ws1['!cols'] = [
+        {wch:6},
+        {wch:20},
+        {wch:20},
+        {wch:10},
+        {wch:12}
+    ];
+
+    ws2['!cols'] = [
+        {wch:6},
+        {wch:20},
+        {wch:10},
+        {wch:10},
+        {wch:10}
+    ];
 
     XLSX.utils.book_append_sheet(wb, ws1, "Players");
     XLSX.utils.book_append_sheet(wb, ws2, "Teams");
