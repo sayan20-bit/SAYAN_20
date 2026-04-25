@@ -16,7 +16,6 @@ body{
     padding:20px;
 }
 
-/* CONTAINER */
 .box{
     background:rgba(255,255,255,0.05);
     padding:20px;
@@ -25,20 +24,16 @@ body{
     margin:auto;
 }
 
-/* TITLE */
 h1{
     text-align:center;
     color:#00d2ff;
-    letter-spacing:2px;
 }
 
-/* INPUT */
 input{
     display:block;
     margin:20px auto;
 }
 
-/* TABLE */
 table{
     width:100%;
     border-collapse:collapse;
@@ -56,38 +51,27 @@ th{
     color:black;
 }
 
-/* MVP */
 .mvp{
     background:rgba(255,215,0,0.1);
     color:gold;
     font-weight:bold;
-    animation:glow 1s infinite alternate;
 }
 
-@keyframes glow{
-    from{ text-shadow:0 0 5px gold;}
-    to{ text-shadow:0 0 20px gold;}
-}
-
-/* TEAM */
 .team{
     color:#aaa;
     font-size:12px;
 }
 
-/* BADGE */
 .badge{
     background:#ff0055;
     padding:3px 8px;
     border-radius:5px;
 }
 
-/* SECTION */
 .section{
     margin-top:40px;
 }
 
-/* CHART */
 #chartBox{
     margin-top:30px;
     background:#111;
@@ -105,7 +89,6 @@ th{
 
 <input type="file" id="files" multiple>
 
-<!-- TEAMS -->
 <div class="section">
 <h2>🏆 TEAMS</h2>
 <table>
@@ -122,7 +105,6 @@ th{
 </table>
 </div>
 
-<!-- PLAYERS -->
 <div class="section">
 <h2>👤 PLAYERS</h2>
 <table>
@@ -140,7 +122,6 @@ th{
 </table>
 </div>
 
-<!-- CHART -->
 <div id="chartBox">
 <canvas id="chart"></canvas>
 </div>
@@ -190,7 +171,7 @@ function parse(text){
 
     lines.forEach(line=>{
 
-        /* TEAM */
+        /* TEAM NAME */
         let teamMatch = line.match(/TeamName:\s*(.*?)(Rank|$)/i);
         if(teamMatch) currentTeam = teamMatch[1].trim();
 
@@ -209,53 +190,37 @@ function parse(text){
             teams[name].k += kills;
             teams[name].p += getPoints(rank);
             teams[name].t += kills + getPoints(rank);
+
             if(rank === 1) teams[name].b++;
         }
 
-        /* PLAYER */
-        let p = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)\s+KILL:\s*(\d+)/i);
+        /* PLAYER + DAMAGE */
+        let playerMatch = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)\s+KILL:\s*(\d+)/i);
 
-        if(p){
-            let name = p[1];
-            let id = p[2];
-            let kills = +p[3];
+        if (playerMatch) {
 
-            if(!stats[id]){
+            let name = playerMatch[1];
+            let id = playerMatch[2];
+            let kills = parseInt(playerMatch[3]);
+
+            if (!stats[id]) {
                 stats[id] = {
                     id,
                     name,
-                    team: currentTeam,
-                    kills:0,
-                    damage:0
+                    team: currentTeam || "Unknown",
+                    kills: 0,
+                    damage: 0
                 };
             }
 
             stats[id].kills += kills;
+            stats[id].damage += kills * 200; // auto damage
         }
 
-        /* DAMAGE */
-       let playerMatch = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)\s+KILL:\s*(\d+)/i);
+    }); // close forEach
 
-if (playerMatch) {
+} // close parse
 
-    let name = playerMatch[1];
-    let id = playerMatch[2];
-    let kills = parseInt(playerMatch[3]);
-
-    if (!stats[id]) {
-        stats[id] = {
-            id,
-            name,
-            team: currentTeam || "Unknown",
-            kills: 0,
-            damage: 0
-        };
-    }
-
-    // 🔥 AUTO DAMAGE = 200 لكل kill
-    stats[id].kills += kills;
-    stats[id].damage += kills * 200;
-}}
 /* RENDER */
 function render(){
     renderPlayers();
@@ -334,38 +299,6 @@ function renderChart(){
         }
     });
 }
-
-/* ================= PROTECTION ================= */
-
-// disable right click
-document.addEventListener("contextmenu", e => e.preventDefault());
-
-// disable keys
-document.onkeydown = function(e){
-    if(
-        e.keyCode === 123 ||
-        (e.ctrlKey && e.shiftKey && e.keyCode === 73) ||
-        (e.ctrlKey && e.shiftKey && e.keyCode === 74) ||
-        (e.ctrlKey && e.keyCode === 85) ||
-        (e.ctrlKey && e.keyCode === 83)
-    ){
-        return false;
-    }
-};
-
-// detect devtools
-setInterval(function(){
-    if(window.outerWidth - window.innerWidth > 160 ||
-       window.outerHeight - window.innerHeight > 160){
-        document.body.innerHTML = `
-        <h1 style="color:red;text-align:center;margin-top:20%;">ACCESS DENIED</h1>`;
-    }
-},1000);
-
-// disable console
-console.log = function(){};
-console.warn = function(){};
-console.error = function(){};
 
 </script>
 
