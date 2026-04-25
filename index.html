@@ -235,16 +235,29 @@ function parse(text){
 
         /* DAMAGE */
         let dmg =
-            line.match(/damage\s*=\s*(\d+)/i) ||
-            line.match(/Damage\s+(\d+)/i) ||
-            line.match(/HPDecrease\s*(\d+)/i);
+    line.match(/damage\s*=\s*(\d+)/i) ||
+    line.match(/Damage\s+(\d+)/i) ||
+    line.match(/HPDecrease\s*:?\s*(\d+)/i);
 
-        let id = (line.match(/(\d{7,10})/) || [])[0];
+// 🔥 أهم حاجة: نجيب ID من نفس سطر اللاعب
+let playerMatch = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)/i);
 
-        if(dmg && id && stats[id]){
-            stats[id].damage += +dmg[1];
-        }
-    });
+if (dmg && playerMatch) {
+
+    let id = playerMatch[2];
+    let damageValue = parseInt(dmg[1]);
+
+    if (!stats[id]) {
+        stats[id] = {
+            id,
+            name: playerMatch[1],
+            team: "Unknown",
+            kills: 0,
+            damage: 0
+        };
+    }
+
+    stats[id].damage += damageValue;
 }
 
 /* RENDER */
