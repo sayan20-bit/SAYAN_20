@@ -234,32 +234,28 @@ function parse(text){
         }
 
         /* DAMAGE */
-        let dmg =
-    line.match(/damage\s*=\s*(\d+)/i) ||
-    line.match(/Damage\s+(\d+)/i) ||
-    line.match(/HPDecrease\s*:?\s*(\d+)/i);
+       let playerMatch = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)\s+KILL:\s*(\d+)/i);
 
-// 🔥 أهم حاجة: نجيب ID من نفس سطر اللاعب
-let playerMatch = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)/i);
+if (playerMatch) {
 
-if (dmg && playerMatch) {
-
+    let name = playerMatch[1];
     let id = playerMatch[2];
-    let damageValue = parseInt(dmg[1]);
+    let kills = parseInt(playerMatch[3]);
 
     if (!stats[id]) {
         stats[id] = {
             id,
-            name: playerMatch[1],
-            team: "Unknown",
+            name,
+            team: currentTeam || "Unknown",
             kills: 0,
             damage: 0
         };
     }
 
-    stats[id].damage += damageValue;
+    // 🔥 AUTO DAMAGE = 200 لكل kill
+    stats[id].kills += kills;
+    stats[id].damage += kills * 200;
 }
-
 /* RENDER */
 function render(){
     renderPlayers();
