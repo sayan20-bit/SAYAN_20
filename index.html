@@ -10,15 +10,27 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
+
+:root{
+    --bg1:#0f0c29;
+    --bg2:#302b63;
+    --bg3:#24243e;
+
+    --textColor:white;
+    --accent:#00d2ff;
+}
+
+/* BODY */
 body{
     font-family:Arial;
-    background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
-    color:white;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+    color:var(--textColor);
     padding:20px;
 }
 
+/* BOX */
 .box{
-    background:rgba(255,255,255,0.05);
+    background:rgba(255,255,255,0.03);
     padding:20px;
     border-radius:20px;
     max-width:1200px;
@@ -27,12 +39,18 @@ body{
 
 h1{
     text-align:center;
-    color:#00d2ff;
+    color:var(--accent);
 }
 
+/* CONTROLS */
+.controls{
+    text-align:center;
+}
+
+/* INPUT */
 input, button{
     display:block;
-    margin:15px auto;
+    margin:10px auto;
     padding:10px 15px;
     border:none;
     border-radius:10px;
@@ -40,49 +58,72 @@ input, button{
 }
 
 button{
-    background:#00d2ff;
+    background:var(--accent);
     color:black;
     font-weight:bold;
 }
 
+/* TABLE WRAPPER */
+.tableWrapper{
+    position:relative;
+    min-height:300px;
+    overflow:hidden;
+}
+
+/* WATERMARK LOGO */
+.watermark{
+    position:absolute;
+    top:55%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    opacity:0.12;
+    pointer-events:none;
+    z-index:1;
+}
+
+.watermark img{
+    width:420px;
+    max-width:80%;
+}
+
+/* TABLE */
 table{
     width:100%;
     border-collapse:collapse;
     margin-top:20px;
+    background:rgba(255,255,255,0.08); /* gris خفيف ثابت */
+    position:relative;
+    z-index:2;
+    border-radius:10px;
+    overflow:hidden;
 }
 
 th,td{
     padding:12px;
     text-align:center;
     border-bottom:1px solid #333;
+    color:var(--textColor);
 }
 
 th{
-    background:#00d2ff;
+    background:var(--accent);
     color:black;
 }
 
+/* MVP */
 .mvp{
     background:rgba(255,215,0,0.1);
     color:gold;
-    font-weight:bold;
 }
 
-.team{
-    color:#aaa;
-    font-size:12px;
-}
-
-.section{
-    margin-top:40px;
-}
-
+/* CHART */
 #chartBox{
     margin-top:30px;
     background:#111;
     padding:15px;
     border-radius:15px;
 }
+
 </style>
 </head>
 
@@ -92,12 +133,30 @@ th{
 
 <h1>🔥 SAYAN ESPORTS ANALYZER</h1>
 
+<div class="controls">
+
+<label>🎨 Background:</label>
+<input type="color" onchange="setBG(this.value)">
+
+<label>✍️ Text Color:</label>
+<input type="color" onchange="setText(this.value)">
+
+<label>🖼️ Upload Logo:</label>
+<input type="file" id="logoInput" accept="image/*">
+
+</div>
+
 <input type="file" id="files" multiple>
 
 <button onclick="downloadExcel()">⬇️ Download Excel</button>
 
-<div class="section">
+<!-- TEAMS -->
+<div class="section tableWrapper">
+
+<div class="watermark" id="watermark"></div>
+
 <h2>🏆 TEAMS</h2>
+
 <table>
 <thead>
 <tr>
@@ -110,10 +169,13 @@ th{
 </thead>
 <tbody id="teams"></tbody>
 </table>
+
 </div>
 
+<!-- PLAYERS -->
 <div class="section">
 <h2>👤 PLAYERS</h2>
+
 <table>
 <thead>
 <tr>
@@ -127,8 +189,10 @@ th{
 </thead>
 <tbody id="players"></tbody>
 </table>
+
 </div>
 
+<!-- CHART -->
 <div id="chartBox">
 <canvas id="chart"></canvas>
 </div>
@@ -137,223 +201,237 @@ th{
 
 <script>
 
-/* 🔒 PROTECTION */
-document.addEventListener("contextmenu", e => e.preventDefault());
+/* COLORS */
+function setBG(c){
+document.documentElement.style.setProperty('--bg1',c);
+document.documentElement.style.setProperty('--bg2',c);
+document.documentElement.style.setProperty('--bg3',c);
+}
 
+function setText(c){
+document.documentElement.style.setProperty('--textColor',c);
+}
+
+/* LOGO */
+document.getElementById("logoInput").addEventListener("change",function(e){
+
+const file = e.target.files[0];
+if(!file) return;
+
+const reader = new FileReader();
+
+reader.onload = function(){
+document.getElementById("watermark").innerHTML =
+`<img src="${reader.result}">`;
+};
+
+reader.readAsDataURL(file);
+});
+
+/* DATA */
 let stats = {};
 let teams = {};
 let chart;
 
-/* FILE INPUT */
 document.getElementById('files').addEventListener('change', function(e){
 
-    const files = e.target.files;
-    stats = {};
-    teams = {};
+const files = e.target.files;
+stats = {};
+teams = {};
 
-    let done = 0;
+let done = 0;
 
-    Array.from(files).forEach(file=>{
-        const reader = new FileReader();
+Array.from(files).forEach(file=>{
+const reader = new FileReader();
 
-        reader.onload = function(){
-            parse(reader.result);
-            done++;
+reader.onload = function(){
+parse(reader.result);
+done++;
+if(done === files.length) render();
+};
 
-            if(done === files.length){
-                render();
-            }
-        };
-
-        reader.readAsText(file);
-    });
+reader.readAsText(file);
 });
 
-/* POINTS */
+});
+
 function getPoints(rank){
-    return {1:12,2:9,3:8,4:7,5:6,6:5,7:4,8:3,9:2,10:1}[rank] || 0;
+return {1:12,2:9,3:8,4:7,5:6,6:5,7:4,8:3,9:2,10:1}[rank] || 0;
 }
 
-/* PARSE */
 function parse(text){
 
-    let currentTeam = "Unknown";
-    let lines = text.split("\n");
+let currentTeam = "Unknown";
+let lines = text.split("\n");
 
-    lines.forEach(line=>{
+lines.forEach(line=>{
 
-        let teamMatch = line.match(/TeamName:\s*(.*?)(Rank|$)/i);
-        if(teamMatch) currentTeam = teamMatch[1].trim();
+let teamMatch = line.match(/TeamName:\s*(.*?)(Rank|$)/i);
+if(teamMatch) currentTeam = teamMatch[1].trim();
 
-        let teamScore = line.match(/TeamName:\s*(.*?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)/);
+let teamScore = line.match(/TeamName:\s*(.*?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)/);
 
-        if(teamScore){
-            let name = teamScore[1];
-            let rank = +teamScore[2];
-            let kills = +teamScore[3];
+if(teamScore){
+let name = teamScore[1];
+let rank = +teamScore[2];
+let kills = +teamScore[3];
 
-            if(!teams[name]) teams[name]={k:0,p:0,t:0,b:0};
+if(!teams[name]) teams[name]={k:0,p:0,t:0,b:0};
 
-            teams[name].k += kills;
-            teams[name].p += getPoints(rank);
-            teams[name].t += kills + getPoints(rank);
+teams[name].k += kills;
+teams[name].p += getPoints(rank);
+teams[name].t += kills + getPoints(rank);
 
-            if(rank === 1) teams[name].b++;
-        }
-
-        let playerMatch = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)\s+KILL:\s*(\d+)/i);
-
-        if (playerMatch) {
-
-            let name = playerMatch[1];
-            let id = playerMatch[2];
-            let kills = parseInt(playerMatch[3]);
-
-            if (!stats[id]) {
-                stats[id] = {
-                    id,
-                    name,
-                    team: currentTeam,
-                    kills: 0,
-                    damage: 0
-                };
-            }
-
-            stats[id].kills += kills;
-            stats[id].damage += kills * 200;
-        }
-
-    });
+if(rank === 1) teams[name].b++;
 }
 
-/* RENDER */
+let playerMatch = line.match(/NAME:\s*(.*?)\s+ID:\s*(\d+)\s+KILL:\s*(\d+)/i);
+
+if(playerMatch){
+
+let name = playerMatch[1];
+let id = playerMatch[2];
+let kills = parseInt(playerMatch[3]);
+
+if(!stats[id]){
+stats[id]={id,name,team:currentTeam,kills:0,damage:0};
+}
+
+stats[id].kills += kills;
+stats[id].damage += kills * 200;
+}
+
+});
+
+}
+
 function render(){
-    renderPlayers();
-    renderTeams();
-    renderChart();
+renderPlayers();
+renderTeams();
+renderChart();
 }
 
-/* PLAYERS */
 function renderPlayers(){
 
-    let arr = Object.values(stats)
-    .sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage));
+let arr = Object.values(stats)
+.sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage));
 
-    let html = "";
+let html="";
 
-    arr.forEach((p,i)=>{
-        html+=`
-        <tr class="${i===0?'mvp':''}">
-            <td>${i+1}</td>
-            <td>${i===0?'👑 ':''}${p.name}</td>
-            <td class="team">${p.team}</td>
-            <td>${p.kills}</td>
-            <td>${p.damage}</td>
-            <td>${i===0?'MVP SAYAN':'PLAYER'}</td>
-        </tr>`;
-    });
+arr.forEach((p,i)=>{
+html+=`
+<tr class="${i===0?'mvp':''}">
+<td>${i+1}</td>
+<td>${i===0?'👑 ':''}${p.name}</td>
+<td>${p.team}</td>
+<td>${p.kills}</td>
+<td>${p.damage}</td>
+<td>${i===0?'MVP':'PLAYER'}</td>
+</tr>`;
+});
 
-    document.getElementById("players").innerHTML = html;
+document.getElementById("players").innerHTML=html;
 }
 
-/* TEAMS */
 function renderTeams(){
 
-    let arr = Object.keys(teams)
-    .sort((a,b)=>teams[b].t - teams[a].t);
+let arr = Object.keys(teams)
+.sort((a,b)=>teams[b].t - teams[a].t);
 
-    let html = "";
+let html="";
 
-    arr.forEach((t,i)=>{
-        html+=`
-        <tr>
-            <td>${i+1}</td>
-            <td>${t}</td>
-            <td>${teams[t].k}</td>
-            <td>${teams[t].t}</td>
-            <td>${teams[t].b}</td>
-        </tr>`;
-    });
+arr.forEach((t,i)=>{
+html+=`
+<tr>
+<td>${i+1}</td>
+<td>${t}</td>
+<td>${teams[t].k}</td>
+<td>${teams[t].t}</td>
+<td>${teams[t].b}</td>
+</tr>`;
+});
 
-    document.getElementById("teams").innerHTML = html;
+document.getElementById("teams").innerHTML=html;
 }
 
-/* CHART */
 function renderChart(){
 
-    let list = Object.values(stats);
+let list = Object.values(stats);
 
-    if(chart) chart.destroy();
+if(chart) chart.destroy();
 
-    chart = new Chart(document.getElementById("chart"),{
-        type:"bar",
-        data:{
-            labels:list.map(p=>p.name),
-            datasets:[{
-                label:"Kills",
-                data:list.map(p=>p.kills),
-                backgroundColor:"#00d2ff"
-            }]
-        },
-        options:{
-            plugins:{legend:{display:false}},
-            responsive:true
-        }
-    });
+chart=new Chart(document.getElementById("chart"),{
+type:"bar",
+data:{
+labels:list.map(p=>p.name),
+datasets:[{
+label:"Kills",
+data:list.map(p=>p.kills),
+backgroundColor:"#00d2ff"
+}]
+},
+options:{
+plugins:{legend:{display:false}},
+responsive:true
+}
+});
+
 }
 
-/* 🔥 EXPORT EXCEL (نسخة مرتبة) */
 function downloadExcel(){
 
-    let playersSorted = Object.values(stats)
-    .sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage));
+let wb = XLSX.utils.book_new();
 
-    let playerData = playersSorted.map((p,i)=>({
-        Rank:i+1,
-        Name:p.name,
-        Team:p.team,
-        Kills:p.kills,
-        Damage:p.damage
-    }));
+XLSX.utils.book_append_sheet(
+wb,
+XLSX.utils.json_to_sheet(Object.values(stats)),
+"Players"
+);
 
-    let teamSorted = Object.keys(teams)
-    .sort((a,b)=>teams[b].t - teams[a].t);
+XLSX.utils.book_append_sheet(
+wb,
+XLSX.utils.json_to_sheet(Object.values(teams)),
+"Teams"
+);
 
-    let teamData = teamSorted.map((t,i)=>({
-        Rank:i+1,
-        Team:t,
-        Kills:teams[t].k,
-        Points:teams[t].t,
-        Booyah:teams[t].b
-    }));
+XLSX.writeFile(wb,"SAYAN_ANALYZER.xlsx");
 
-    let wb = XLSX.utils.book_new();
-
-    let ws1 = XLSX.utils.json_to_sheet(playerData);
-    let ws2 = XLSX.utils.json_to_sheet(teamData);
-
-    /* ✅ عرض الأعمدة */
-    ws1['!cols'] = [
-        {wch:6},
-        {wch:20},
-        {wch:20},
-        {wch:10},
-        {wch:12}
-    ];
-
-    ws2['!cols'] = [
-        {wch:6},
-        {wch:20},
-        {wch:10},
-        {wch:10},
-        {wch:10}
-    ];
-
-    XLSX.utils.book_append_sheet(wb, ws1, "Players");
-    XLSX.utils.book_append_sheet(wb, ws2, "Teams");
-
-    XLSX.writeFile(wb, "SAYAN_ANALYZER.xlsx");
 }
+
+
+/* 🔒 EXTRA PROTECTION LAYER (DO NOT MODIFY ORIGINAL CODE) */
+
+/* منع الزر اليمين */
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+/* منع نسخ + لصق + تحديد */
+document.addEventListener("copy", e => e.preventDefault());
+document.addEventListener("cut", e => e.preventDefault());
+document.addEventListener("paste", e => e.preventDefault());
+
+/* منع فتح DevTools */
+document.addEventListener("keydown", function(e){
+
+    if(
+        e.key === "F12" ||
+        (e.ctrlKey && e.key.toLowerCase() === "u") ||
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "i") ||
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") ||
+        (e.ctrlKey && e.key.toLowerCase() === "s")
+    ){
+        e.preventDefault();
+        return false;
+    }
+});
+
+/* منع تحديد النص (JS backup) */
+document.addEventListener("selectstart", e => e.preventDefault());
+
+/* تنظيف الكونسول باش يصعب التتبع */
+setInterval(() => {
+    console.clear();
+}, 1000);
+
 
 </script>
 
