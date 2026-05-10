@@ -382,20 +382,59 @@ function downloadExcel(){
 
 let wb = XLSX.utils.book_new();
 
-XLSX.utils.book_append_sheet(
-wb,
-XLSX.utils.json_to_sheet(Object.values(stats)),
-"Players"
-);
+/* ===== PLAYERS TABLE ===== */
+let playersArr = Object.values(stats)
+.sort((a,b)=>(b.kills*1000+b.damage)-(a.kills*1000+a.damage))
+.map((p,i)=>({
+    Rank: i+1,
+    Name: p.name,
+    Team: p.team,
+    Kills: p.kills,
+    Damage: p.damage,
+    Status: i===0 ? "MVP" : "PLAYER"
+}));
 
-XLSX.utils.book_append_sheet(
-wb,
-XLSX.utils.json_to_sheet(Object.values(teams)),
-"Teams"
-);
+let wsPlayers = XLSX.utils.json_to_sheet(playersArr);
 
+/* تحسين عرض الأعمدة */
+wsPlayers["!cols"] = [
+    { wch: 8 },   // Rank
+    { wch: 20 },  // Name
+    { wch: 20 },  // Team
+    { wch: 10 },  // Kills
+    { wch: 12 },  // Damage
+    { wch: 10 }   // Status
+];
+
+XLSX.utils.book_append_sheet(wb, wsPlayers, "Players");
+
+
+/* ===== TEAMS TABLE ===== */
+let teamsArr = Object.keys(teams)
+.sort((a,b)=>teams[b].t - teams[a].t)
+.map((t,i)=>({
+    Rank: i+1,
+    Team: t,
+    Kills: teams[t].k,
+    Points: teams[t].t,
+    BOOYAH: teams[t].b
+}));
+
+let wsTeams = XLSX.utils.json_to_sheet(teamsArr);
+
+wsTeams["!cols"] = [
+    { wch: 8 },
+    { wch: 25 },
+    { wch: 10 },
+    { wch: 10 },
+    { wch: 10 }
+];
+
+XLSX.utils.book_append_sheet(wb, wsTeams, "Teams");
+
+
+/* EXPORT FINAL */
 XLSX.writeFile(wb,"SAYAN_ANALYZER.xlsx");
-
 }
 
 
