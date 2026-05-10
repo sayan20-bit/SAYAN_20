@@ -76,14 +76,19 @@ button{
     top:55%;
     left:50%;
     transform:translate(-50%,-50%);
-    opacity:0.12;
+    opacity:0.15;
     pointer-events:none;
     z-index:1;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
 .watermark img{
-    width:420px;
-    max-width:80%;
+    width:60%;
+    max-width:900px;
+    height:auto;
 }
 
 /* TABLE */
@@ -471,6 +476,25 @@ setInterval(() => {
     console.clear();
 }, 1000);
 
+    function resizeLogo(){
+    const table = document.querySelector(".tableWrapper table");
+    const watermark = document.querySelector(".watermark img");
+
+    if(!table || !watermark) return;
+
+    const rows = table.querySelectorAll("tbody tr").length;
+
+    // الحجم حسب عدد الفرق
+    let size = 300 + (rows * 25);
+
+    // limits باش ما يكبرش بزاف
+    size = Math.min(size, 900);
+    size = Math.max(size, 250);
+
+    watermark.style.width = size + "px";
+}
+
+setInterval(resizeLogo, 500);
 
 </script>
 
