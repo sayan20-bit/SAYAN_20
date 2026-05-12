@@ -172,7 +172,7 @@ th{
 
 <h2>🏆 TEAMS</h2>
 
-<table>
+<table id="teamsTable">
 <thead>
 <tr>
 <th>Rank</th>
@@ -184,14 +184,16 @@ th{
 </thead>
 <tbody id="teams"></tbody>
 </table>
-
+<button onclick="copyTable('teamsTable')">
+📋 Copy Teams Table
+</button>
 </div>
 
 <!-- PLAYERS -->
 <div class="section">
 <h2>👤 PLAYERS</h2>
 
-<table>
+<table id="playersTable">
 <thead>
 <tr>
 <th>Rank</th>
@@ -204,7 +206,9 @@ th{
 </thead>
 <tbody id="players"></tbody>
 </table>
-
+<button onclick="copyTable('playersTable')">
+📋 Copy Players Table
+</button>
 </div>
 
 <!-- CHART -->
@@ -452,7 +456,32 @@ XLSX.utils.book_append_sheet(wb, wsTeams, "Teams");
 XLSX.writeFile(wb,"SAYAN_ANALYZER.xlsx");
 }
 
+/* ===== COPY TABLE ===== */
 
+function copyTable(tableId){
+
+    let table = document.getElementById(tableId);
+    let rows = table.querySelectorAll("tr");
+
+    let text = "";
+
+    rows.forEach(row => {
+
+        let cols = row.querySelectorAll("th, td");
+        let rowText = [];
+
+        cols.forEach(col => {
+            rowText.push(col.innerText);
+        });
+
+        text += rowText.join("\t") + "\n";
+    });
+
+    navigator.clipboard.writeText(text);
+
+}
+
+/* BUTTONS */
 /* 🔒 EXTRA PROTECTION LAYER (DO NOT MODIFY ORIGINAL CODE) */
 
 /* منع الزر اليمين */
