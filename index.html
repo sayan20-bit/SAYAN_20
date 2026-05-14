@@ -498,6 +498,7 @@ tbody tr:hover{
 <th>Rank</th>
 <th>Team</th>
 <th>Kills</th>
+<th>Placement</th>
 <th>Points</th>
 <th>BOOYAH</th>
 </tr>
@@ -777,6 +778,10 @@ margin-right:8px;
 ">`
 : "";
 
+let placementPoints = teams[t].p;
+let totalPoints = teams[t].t;
+let killPoints = teams[t].k;
+
 html+=`
 <tr>
 
@@ -786,8 +791,16 @@ html+=`
 ${logo} ${t}
 </td>
 
-<td>${teams[t].k}</td>
-<td>${teams[t].t}</td>
+<td>${killPoints}</td>
+
+<td>${placementPoints}</td>
+
+<td>
+${placementPoints} + ${killPoints}
+=
+<b>${totalPoints}</b>
+</td>
+
 <td>${teams[t].b}</td>
 
 </tr>`;
@@ -856,10 +869,11 @@ let teamsArr = Object.keys(teams)
 .sort((a,b)=>teams[b].t - teams[a].t)
 .map((t,i)=>({
     Rank: i+1,
-    Team: t,
-    Kills: teams[t].k,
-    Points: teams[t].t,
-    BOOYAH: teams[t].b
+Team: t,
+Kills: teams[t].k,
+Placement: teams[t].p,
+Points: teams[t].t,
+BOOYAH: teams[t].b
 }));
 
 let wsTeams = XLSX.utils.json_to_sheet(teamsArr);
@@ -868,6 +882,7 @@ wsTeams["!cols"] = [
     { wch: 8 },
     { wch: 25 },
     { wch: 10 },
+    { wch: 12 },
     { wch: 10 },
     { wch: 10 }
 ];
