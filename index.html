@@ -334,12 +334,18 @@ tbody tr:hover{
 
 /* MVP */
 .mvp{
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    
-    color:white;
+    background:linear-gradient(
+    90deg,
+    rgba(255,215,0,0.10),
+    rgba(255,215,0,0.03)
+    );
+
+    color:gold;
     font-weight:bold;
 }
-
+.mvp td{
+    color:#ffe600 !important;
+}
 /* CHART */
 #chartBox{
     margin-top:35px;
@@ -444,9 +450,7 @@ tbody tr:hover{
     border-radius:10px;
 }
 
-th{
-    background: rgba(0, 210, 255, 0.85);
-}
+
 
 td{
     color: #ffffff;
@@ -667,21 +671,19 @@ document.querySelectorAll(
 
 }
 
-/* HEADER + MVP */
+/* HEADER  */
 function setTablesDesign(c){
 
-/* headers */
+/* HEADERS */
 document.querySelectorAll(
 "#teamsTable th, #playersTable th"
 ).forEach(th=>{
-    th.style.background = c;
-});
 
-/* MVP row */
-document.querySelectorAll(".mvp").forEach(row=>{
-    row.style.background = c;
-});
+    th.style.background = `
+    linear-gradient(135deg, ${c}, #7c3aed)
+    `;
 
+});
 }
 
 
