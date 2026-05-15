@@ -108,9 +108,15 @@ h2{
 
 /* TOP ROW */
 .topControls{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 900px){
+    .topControls{
+        grid-template-columns: 1fr;
+    }
 }
 
 /* CONTROL CARD */
@@ -303,7 +309,7 @@ th,td{
 
 table{
     background: rgba(10, 15, 25, 0.55);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(12px);
 }
 /* HEADER */
@@ -461,22 +467,27 @@ td{
 
 <div class="topControls">
 
+
+
 <div class="controlCard">
 <label>🎨 Background Color</label>
 <input type="color" onchange="setBG(this.value)">
 </div>
 
 <div class="controlCard">
-<label>✍️ Text Color</label>
+<label>✍️ Tables Text Color</label>
 <input type="color" onchange="setText(this.value)">
 </div>
 
+<div class="controlCard">
+<label>🧩 Tables Header + MVP Color</label>
+<input type="color" onchange="setTablesDesign(this.value)">
 </div>
 
-<div class="controlCard logoCard">
-<label>🖼️ Upload Tournament Logo</label>
-<input type="file" id="logoInput" accept="image/*">
 </div>
+
+</div>
+
 <div class="controlCard">
     <label>🖼️ Table Background Image</label>
     <input type="file" id="tableBgInput" accept="image/*">
@@ -485,7 +496,7 @@ td{
 <label >Upload Match Results File</label>
 <input type="file" id="files" multiple>
 </div>
-</div>
+
 
 
 <!-- BUTTONS -->
@@ -633,7 +644,7 @@ document.getElementById("tableBgInput").addEventListener("change", function(e){
             overlay.style.left = "0";
             overlay.style.width = "100%";
             overlay.style.height = "100%";
-            overlay.style.background = "rgba(0,0,0,0.25)";
+            overlay.style.background = "rgba(0,0,0,0.05)";
             overlay.style.zIndex = "1";
             wrapper.prepend(overlay);
         }
@@ -646,24 +657,35 @@ document.getElementById("tableBgInput").addEventListener("change", function(e){
     reader.readAsDataURL(file);
 });
 function setText(c){
-document.documentElement.style.setProperty('--textColor',c);
+
+document.documentElement.style.setProperty('--textColor', c);
+
+/* غير كتابة الجداول */
+document.querySelectorAll(
+"#teamsTable th, #teamsTable td, #playersTable th, #playersTable td"
+).forEach(el=>{
+    el.style.color = c;
+});
+
 }
 
-/* LOGO */
-document.getElementById("logoInput").addEventListener("change",function(e){
+/* HEADER + MVP */
+function setTablesDesign(c){
 
-const file = e.target.files[0];
-if(!file) return;
-
-const reader = new FileReader();
-
-reader.onload = function(){
-document.getElementById("watermark").innerHTML =
-`<img src="${reader.result}">`;
-};
-
-reader.readAsDataURL(file);
+/* headers */
+document.querySelectorAll(
+"#teamsTable th, #playersTable th"
+).forEach(th=>{
+    th.style.background = c;
 });
+
+/* MVP row */
+document.querySelectorAll(".mvp").forEach(row=>{
+    row.style.background = c;
+});
+
+}
+
 
 /* DATA */
 let stats = {};
