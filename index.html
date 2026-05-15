@@ -819,6 +819,68 @@ ${logo} ${t}
 <b>${totalPoints}</b>
 </td>
 
+```javascript
+function renderTeams(){
+
+let arr = Object.keys(teams).sort((a,b)=>{
+
+    /* 1️⃣ TOTAL POINTS */
+    if(teams[b].t !== teams[a].t){
+        return teams[b].t - teams[a].t;
+    }
+
+    /* 2️⃣ BOOYAH */
+    if(teams[b].b !== teams[a].b){
+        return teams[b].b - teams[a].b;
+    }
+
+    /* 3️⃣ KILLS */
+    if(teams[b].k !== teams[a].k){
+        return teams[b].k - teams[a].k;
+    }
+
+    /* 4️⃣ PLACEMENT */
+    return teams[b].p - teams[a].p;
+
+});
+
+let html="";
+
+arr.forEach((t,i)=>{
+
+let logo = teamLogos[t]
+? `<img src="${teamLogos[t]}"
+style="
+width:30px;
+height:30px;
+border-radius:50%;
+object-fit:cover;
+vertical-align:middle;
+margin-right:8px;
+">`
+: "";
+
+let placementPoints = teams[t].p;
+let totalPoints = teams[t].t;
+let killPoints = teams[t].k;
+
+html+=`
+<tr>
+
+<td>${i+1}</td>
+
+<td style="text-align:left;padding-left:15px;">
+${logo} ${t}
+</td>
+
+<td>${killPoints}</td>
+
+<td>${placementPoints}</td>
+
+<td>
+<b>${totalPoints}</b>
+</td>
+
 <td>${teams[t].b}</td>
 
 </tr>`;
@@ -826,6 +888,7 @@ ${logo} ${t}
 
 document.getElementById("teams").innerHTML=html;
 }
+
 
 function renderChart(){
 
