@@ -865,7 +865,7 @@ let playersArr = Object.values(stats)
     Kills: p.kills,
     Damage: p.damage,
     Status: i===0 ? "MVP" : "PLAYER"
-}));
+}))
 
 let wsPlayers = XLSX.utils.json_to_sheet(playersArr);
 
