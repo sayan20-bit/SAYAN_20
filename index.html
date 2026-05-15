@@ -301,6 +301,11 @@ th,td{
     color:var(--textColor);
 }
 
+table{
+    background: rgba(10, 15, 25, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
 /* HEADER */
 th{
     background:linear-gradient(135deg,#00d2ff,#7c3aed);
@@ -434,6 +439,15 @@ tbody tr:hover{
     background:#00d2ff;
     border-radius:10px;
 }
+
+th{
+    background: rgba(0, 210, 255, 0.85);
+}
+
+td{
+    color: #ffffff;
+    text-shadow: 0 0 5px rgba(0,0,0,0.6);
+}
 </style>
 </head>
 
@@ -463,10 +477,16 @@ tbody tr:hover{
 <label>🖼️ Upload Tournament Logo</label>
 <input type="file" id="logoInput" accept="image/*">
 </div>
-
+<div class="controlCard">
+    <label>🖼️ Table Background Image</label>
+    <input type="file" id="tableBgInput" accept="image/*">
+</div>
+<div class="controlCard">
+<label >Upload Match Results File</label>
+<input type="file" id="files" multiple>
+</div>
 </div>
 
-<input type="file" id="files" multiple>
 
 <!-- BUTTONS -->
 <div class="buttonsRow">
@@ -586,7 +606,45 @@ document.documentElement.style.setProperty('--bg1',c);
 document.documentElement.style.setProperty('--bg2',c);
 document.documentElement.style.setProperty('--bg3',c);
 }
+document.getElementById("tableBgInput").addEventListener("change", function(e){
 
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(){
+
+        const wrapper = document.querySelector(".tableWrapper");
+
+        wrapper.style.backgroundImage = `url(${reader.result})`;
+        wrapper.style.backgroundSize = "cover";
+        wrapper.style.backgroundPosition = "center";
+        wrapper.style.backgroundRepeat = "no-repeat";
+
+        // overlay باش يبقى النص باين
+        wrapper.style.position = "relative";
+
+        if(!document.getElementById("tableOverlay")){
+            let overlay = document.createElement("div");
+            overlay.id = "tableOverlay";
+            overlay.style.position = "absolute";
+            overlay.style.top = "0";
+            overlay.style.left = "0";
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.background = "rgba(0,0,0,0.25)";
+            overlay.style.zIndex = "1";
+            wrapper.prepend(overlay);
+        }
+
+        // table فوق overlay
+        document.querySelector("#teamsTable").style.position = "relative";
+        document.querySelector("#teamsTable").style.zIndex = "2";
+    };
+
+    reader.readAsDataURL(file);
+});
 function setText(c){
 document.documentElement.style.setProperty('--textColor',c);
 }
